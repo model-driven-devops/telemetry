@@ -1,0 +1,39 @@
+version: "3.3"  # Use the latest version of Docker Compose
+
+services:
+  kafka:
+    image: docker.io/bitnami/kafka:3.5
+    container_name: kafka
+    ports:
+      - "9094:9094"  # Expose Kafka on port 9094
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0  # Adjust the node ID as needed
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://192.133.186.217:9094  # Replace with your external IP
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+
+  telegraf:
+    container_name: telegraf
+    image: telegraf:latest
+    depends_on:
+      - kafka
+    ports:
+      - "57000:57000"  # Expose the Telegraf metrics port (adjust as needed)
+    volumes:
+      - ./conf/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+#    entrypoint: ["sh", "-c", "if command -v nc; then while ! nc -z kafka 9092; do sleep 1; done; else while ! (echo > /dev/tcp/kafka/9092) 2>/dev/null; do sleep 1; done; fi && telegraf"]
+    restart: always
+
+# Define a named volume for Kafka data storage
+volumes:
+  kafka_data:
+    driver: local

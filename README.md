@@ -76,14 +76,14 @@ docker compose up
 
 ## Send it something
 
-Now that your containers are up and running, we need to send some telemetry from our router. Here is a basic config that sends CPU utilization every 5 seconds. Not very sexy, but its simple for testing.
+Now that your containers are up and running, we need to send some telemetry from our router. Here is a basic config that sends interface statistics every 5 seconds. Not very sexy, but its simple for testing.
 
 ```
 netconf-yang
 
 telemetry ietf subscription 1
  encoding encode-kvgpb
- filter xpath /process-cpu-ios-xe-oper:cpu-usage/cpu-utilization/five-seconds
+ filter xpath /interfaces-ios-xe-oper:interfaces/interface/statistics
  source-address <IP ADDRESS OF LOCAL INTERFACE>
  stream yang-push
  update-policy periodic 500
@@ -149,6 +149,7 @@ output {
  }
 }
 ```
+Note: The JSON filter is required because MDT uses a "tags" field in their embedded JSON, which has meaning to the JSON Logstash plugin. To extract the data nested under "tags", we need the source and destination filter.
 
 Now you just gotta give it a docker compose up and watch the magic happen.
 
@@ -158,3 +159,5 @@ docker compose up
 You should be able to log into kibana and see all your cool data.
 
 ![Screenshot 2023-08-14 at 3 28 33 PM](https://github.com/model-driven-devops/telemetry/assets/65776483/dc95f9bc-6ebf-4ce9-bd30-df791ac6b5a5)
+
+

@@ -12,6 +12,9 @@ Assumptions
 - The Cisco device can talk to the Ubuntu image.
 - You are using this for testing (most security is turned off)
 
+Notes
+- GNMI Dial In does not seem to have support on virtual devices.
+
 ## Telegraf and Kafka
 
 You can can clone this repo or copy and paste. It's only a few files, so whatever is easiest. 
@@ -126,6 +129,13 @@ input {
   kafka {
     bootstrap_servers => "(INSERT KAFKA HOST IP):9094"
     topics => ["kafka_topic_1"]
+  }
+}
+
+filter {
+  json {
+    source => "message"
+    target => "parsed_json"
   }
 }
 
